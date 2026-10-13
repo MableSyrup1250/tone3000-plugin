@@ -1,3 +1,4 @@
+#include "core/ExternalLinks.h"
 #include "PluginSettingsPage.h"
 
 #include "InlineChrome.h"
@@ -176,7 +177,7 @@ PluginSettingsPage::PluginSettingsPage(Services& services)
   calibration_.content().add(calibrationHelp_);
   calibration_.content().add(calibrationTip_);
   calibration_.content().add(calibrationHandoff_);
-  calibrationHelp_.onLink = [](const juce::String& href) { juce::URL(href).launchInDefaultBrowser(); };
+  calibrationHelp_.onLink = [](const juce::String& href) { openExternalLink(href); };
   calibration_.onChange = [this](bool on) { setAndRemember(calibrateParam_, on ? 1.0f : 0.0f); };
   add(calibration_);
 
@@ -229,7 +230,7 @@ PluginSettingsPage::PluginSettingsPage(Services& services)
   footer_.add(updateBox_);
   footer_.add(version_, form::kControlGap);
   update_.onClick = [this] {
-    if (const auto& u = services_.updates.update()) juce::URL(u->url).launchInDefaultBrowser();
+    if (const auto& u = services_.updates.update()) openExternalLink(u->url);
   };
   add(footer_);
 

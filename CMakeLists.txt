@@ -410,6 +410,30 @@ if (EXISTS "${_juce_standalone_cpp}")
     endif()
 endif()
 
+# Artemis supplies XDG_CONFIG_HOME when launching the standalone. JUCE's
+# resolveXDGFolder reads user-dirs.dirs rather than the environment, so the
+# stock implementation silently restores a different settings file. Honour
+# the explicit config root (also used by the repeated-launch regression).
+set(_juce_linux_files "${T3K_JUCE_SOURCE_DIR}/modules/juce_core/native/juce_Files_linux.cpp")
+if (T3K_ARTEMIS_KIOSK AND EXISTS "${_juce_linux_files}")
+    file(READ "${_juce_linux_files}" _juce_files_src)
+    if (NOT _juce_files_src MATCHES "T3K_ARTEMIS_XDG_CONFIG")
+        set(_xdg_old [=[case userApplicationDataDirectory:    return resolveXDGFolder ("XDG_CONFIG_HOME",   "~/.config");]=])
+        set(_xdg_new [=[case userApplicationDataDirectory: // T3K_ARTEMIS_XDG_CONFIG
+        {
+            const auto configured = SystemStats::getEnvironmentVariable ("XDG_CONFIG_HOME", {});
+            return File::isAbsolutePath (configured) ? File (configured)
+                                                    : resolveXDGFolder ("XDG_CONFIG_HOME", "~/.config");
+        }]=])
+        string(FIND "${_juce_files_src}" "${_xdg_old}" _xdg_anchor)
+        if (_xdg_anchor EQUAL -1)
+            message(FATAL_ERROR "T3K_ARTEMIS_XDG_CONFIG: JUCE settings anchor changed")
+        endif()
+        string(REPLACE "${_xdg_old}" "${_xdg_new}" _juce_files_src "${_juce_files_src}")
+        file(WRITE "${_juce_linux_files}" "${_juce_files_src}")
+    endif()
+endif()
+
 # The Artemis standalone owns the full display. JUCE's stock standalone
 # calls kiosk mode before showing the window and retains a title bar on Linux.
 # Patch the standalone entry point while configuring, as with the existing

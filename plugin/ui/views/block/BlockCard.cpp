@@ -1,3 +1,4 @@
+#include "core/ExternalLinks.h"
 #include "BlockCard.h"
 
 #include <algorithm>
@@ -213,7 +214,7 @@ void BlockCard::buildBody() {
     services_.connection.requireConnection([this] { services_.session.login(); });
   };
   meta_.info().onRetry = [this] { fetchInfo(/*background=*/false); };
-  meta_.info().onOpenUrl = [](const juce::String& url) { juce::URL(url).launchInDefaultBrowser(); };
+  meta_.info().onOpenUrl = [](const juce::String& url) { openExternalLink(url); };
   body_.addAndMakeVisible(meta_);
 
   select_.onChange = [this](const juce::String& id) { switchModel(id); };
