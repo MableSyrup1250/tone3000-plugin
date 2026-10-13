@@ -897,6 +897,34 @@ struct HoustonExportUiTests : juce::UnitTest {
     expect(exportItem().label.isEmpty());
     tile.reset();
     backend.completion(juce::JSON::parse(R"({"path":"/tmp/example.nam"})"));
+
+    beginTest("inspection toolbar exports the active model and handles failures and a closed view");
+    backend.available = true;
+    block.modelLoading = false;
+    auto card = std::make_unique<BlockCard>(services, block, false);
+    card->setVisible(true);
+    auto* save = drive::buttonNamed(*card, "Save to Houston");
+    expect(save != nullptr);
+    if (save) {
+      expect(save->isVisible() && save->isEnabled());
+      save->onClick();
+      expectEquals(juce::String(backend.exportedId), juce::String("export-me"));
+      expect(!save->isEnabled());
+      backend.completion(juce::JSON::parse(R"({"error":"Houston Imports unavailable"})"));
+      expect(save->isEnabled());
+      expectEquals(services.toast.message(), juce::String("Houston Imports unavailable"));
+      block.modelLoading = true;
+      card->setBlock(block, false);
+      expect(!save->isEnabled());
+      block.modelLoading = false;
+      card->setBlock(block, false);
+      save->onClick();
+      backend.completion(juce::JSON::parse(R"({"path":"/tmp/example.nam"})"));
+      expectEquals(services.toast.message(), juce::String("Saved to Houston Imports"));
+      save->onClick();
+      card.reset();
+      backend.completion(juce::JSON::parse(R"({"path":"/tmp/example.nam"})"));
+    }
   }
 };
 
@@ -2137,6 +2165,20 @@ struct ArtemisKeyboardTests : juce::UnitTest {
     expectEquals(keyboard.getNumChildComponents(), 12);
     expect(press("7"));
     expectEquals(field.getText(), juce::String("7"));
+    expect(press("HIDE"));
+    beginTest("compact panel keyboard leaves the upper search field visible and every key reachable");
+    host.setSize(780, 360);
+    content.setBounds(host.getLocalBounds());
+    field.setComponentID({});
+    field.setBounds(190, 72, 550, 40);
+    field.grabKeyboardFocus();
+    pump();
+    keyboard.layoutIn(host.getLocalBounds());
+    expect(keyboard.isVisible());
+    expect(!keyboard.getBounds().intersects(field.getBounds()));
+    for (auto* key : keyboard.getChildren())
+      expect(keyboard.getLocalBounds().contains(key->getBounds()), "every key fits the compact keyboard");
+    expect(press("q"));
     expect(press("HIDE"));
     window.setVisible(false);
   }

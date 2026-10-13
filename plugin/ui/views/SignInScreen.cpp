@@ -93,24 +93,27 @@ void SignInScreen::DeviceCards::setDevice(const ToneSession::AuthFlow::Device& d
   repaint();
 }
 
-void SignInScreen::DeviceCards::resized() { qr_.setTopLeftPosition(kCardPad, kCardPad); }
+void SignInScreen::DeviceCards::resized() {
+  const int qrSize = std::min(kQrSize, getHeight() - 2 * kCardPad - kTightGap - 40);
+  qr_.setBounds((kCardWidth - qrSize) / 2, kCardPad, qrSize, qrSize);
+}
 
 void SignInScreen::DeviceCards::paint(juce::Graphics& g) {
-  const auto left = juce::Rectangle<float>(0, 0, kCardWidth, kCardHeight);
+  const auto left = juce::Rectangle<float>(0, 0, kCardWidth, static_cast<float>(getHeight()));
   const auto right = left.withX(static_cast<float>(getWidth() - kCardWidth));
   paint::border(g, left, kCardCorner, theme::kBorder);
   paint::border(g, right, kCardCorner, theme::kBorder);
   // OR, centred in the space between the cards.
-  paint::cssLine(g, kOr, left.getRight(), (kCardHeight - lineHeight(kTitlePx)) / 2, lineHeight(kTitlePx),
+  paint::cssLine(g, kOr, left.getRight(), (getHeight() - lineHeight(kTitlePx)) / 2, lineHeight(kTitlePx),
                  right.getX() - left.getRight(), Fonts::sans(kTitlePx, true), theme::kGray,
                  juce::Justification::horizontallyCentred);
   if (!scan_ || !visit_) return;
   const auto centred = juce::Justification::horizontallyCentred;
-  scan_->draw(g, {kCardPad, static_cast<float>(kCardPad + kQrSize + kGap)}, theme::kWhite, centred);
+  scan_->draw(g, {kCardPad, static_cast<float>(qr_.getBottom() + kTightGap)}, theme::kWhite, centred);
   // The code card's text and code stack centred in it.
   const float codeLine = lineHeight(kCodePx);
   const float stack = visit_->height() + kGap + codeLine;
-  const float top = std::round((kCardHeight - stack) / 2);
+  const float top = std::round((getHeight() - stack) / 2);
   visit_->draw(g, {right.getX() + kCardPad, top}, theme::kWhite, centred);
   paint::cssLine(g, code_, right.getX() + kCardPad, top + visit_->height() + kGap, codeLine,
                  kCardWidth - 2.0f * kCardPad, Fonts::mono(kCodePx, true), theme::kWhite, centred);
@@ -241,8 +244,8 @@ void SignInScreen::rebuild() {
     // The device page (mockup 13342:46055).
     deviceCards_.setDevice(*flow.device);
     headline = juce::String(kPhoneTitle) + ". " + deviceCards_.spoken();
-    addComponent(phoneTitle_, 0);
-    addComponent(deviceCards_, kSectionGap);
+    phoneTitle_.setVisible(true);
+    addComponent(deviceCards_, 0);
   } else if (flow.device && flow.device->state == DeviceState::failed) {
     headline = flow.device->error + " " + kDeviceHelp;
     addText(headline, kCopyPx, theme::kWhite, kWideMaxWidth, 0);
@@ -278,7 +281,7 @@ void SignInScreen::paint(juce::Graphics& g) {
 
 void SignInScreen::resized() {
   const int w = getWidth();
-  const int colW = std::min(design::kWidth - 2 * kPadX, w);
+  const int colW = std::max(0, w - 2 * kPadX);
   back_.setTopLeftPosition((w - colW) / 2, kPadTop);
   layoutColumn();
 }
@@ -288,7 +291,14 @@ void SignInScreen::resized() {
 void SignInScreen::layoutColumn() {
   const int top = kPadTop + BackLink::kHeight;
   const int cx = getWidth() / 2;
-  int y = std::max(top + kGap, top + (getHeight() - top - columnHeight_) / 2);
+  phoneTitle_.setTopLeftPosition(cx - phoneTitle_.getWidth() / 2, kPadTop);
+  if (deviceCards_.isVisible()) {
+    deviceCards_.setSize(deviceCards_.getWidth(), std::min(kCardHeight, std::max(160, getHeight() - top - 2 * kTightGap)));
+    rows_.front().height = deviceCards_.getHeight();
+    columnHeight_ = deviceCards_.getHeight();
+  }
+  const int gap = deviceCards_.isVisible() ? kTightGap : kGap;
+  int y = std::max(top + gap, top + (getHeight() - top - columnHeight_) / 2);
   for (auto& row : rows_) {
     y += row.gapBefore;
     if (row.component != nullptr) {

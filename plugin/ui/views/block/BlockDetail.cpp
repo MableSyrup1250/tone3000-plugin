@@ -37,11 +37,10 @@ BlockDetail::BlockDetail(Services& services, const std::string& blockId)
     : services_(services),
       blockId_(blockId),
       scroller_(std::make_unique<DragScroller>(DragScroller::Axis::vertical)),
-      back_(std::make_unique<BackLink>("BLOCK", help::Key::backToChain)) {
+      back_(std::make_unique<BackLink>("BACK", help::Key::backToChain)) {
   back_->onClick = [this] {
     if (onBack) onBack();
   };
-  column_.addAndMakeVisible(*back_);
   scroller_->setViewedComponent(&column_, false);
   addAndMakeVisible(*scroller_);
   services_.chain.addListener(this);
@@ -65,12 +64,13 @@ void BlockDetail::sync() {
   }
   if (!card_) {
     card_ = std::make_unique<BlockCard>(services_, *found.item, found.namDownstream);
+    card_->setNavigation(*back_);
+    card_->onViewChanged = [this] {
+      scroller_->setViewPosition(0, 0);
+      if (onViewChanged) onViewChanged();
+    };
     card_->onSwap = [this] {
       if (onSwap) onSwap(blockId_);
-    };
-    card_->onInfoVisible = [this](bool open) {
-      infoOpen_ = open;
-      layout();
     };
     card_->addComponentListener(this);
     column_.addAndMakeVisible(*card_);
@@ -83,17 +83,17 @@ void BlockDetail::sync() {
 void BlockDetail::resized() { layout(); }
 
 void BlockDetail::layout() {
-  if (!card_) return;
+  if (!card_ || layingOut_) return;
+  const juce::ScopedValueSetter<bool> guard(layingOut_, true);
   scroller_->setBounds(getLocalBounds());
-  const int x = (getWidth() - BlockCard::kWidth) / 2;
-  // Info view: the pads live in the scroll content; otherwise the column is
-  // pinned under the shared pad and never scrolls.
-  const int top = kPadY;
-  back_->setTopLeftPosition(x, top);
-  card_->setTopLeftPosition(x, top + back_->getHeight() + kBackGap);
+  // Leave room for the stereo meters' inward overflow as well as a gap.
+  const int width = std::min(BlockCard::kWidth, std::max(0, getWidth() - 24));
+  card_->setAvailableHeight(getHeight() - 12 - kPadY);
+  card_->setSize(width, card_->getHeight());
+  card_->setSize(width, card_->preferredHeight());
+  card_->setTopLeftPosition((getWidth() - width) / 2, 12);
   const int contentH = card_->getBottom() + kPadY;
-  column_.setSize(getWidth(), infoOpen_ ? std::max(contentH, getHeight()) : getHeight());
-  if (!infoOpen_) scroller_->setViewPosition(0, 0);
+  column_.setSize(getWidth(), std::max(contentH, getHeight()));
 }
 
 }  // namespace t3k::ui

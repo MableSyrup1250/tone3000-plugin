@@ -1,9 +1,10 @@
 // In-plugin tone browser: the Select tone takeover that covers everything
 // under the header (meters, chain and faceplate). A pinned header (← SELECT
-// TONE, the search box, the filter bar) and a paginator pinned at the
+// TONE alongside the search box) and a paginator pinned at the
 // bottom, with the card grid (or loading dots / empty copy / an error with
-// Try again) scrolling between them, fading out under both. The query,
-// filter row and last page live in the BrowserState so the screen comes
+// Try again) scrolling between them, fading out under both. The filter
+// row collapses on downward scrolling and returns on upward scrolling.
+// The query, filter row and last page live in the BrowserState so the screen comes
 // back as it was left.
 //
 // The ← SELECT TONE row zooms with the window like everything else; the
@@ -113,6 +114,7 @@ private:
   void rebuildBody();
   void layoutBody();
   void layoutContent();
+  void scrolled();
   void paintScrollFades(juce::Graphics& g);
   const char* emptyCopy() const;
 
@@ -125,13 +127,15 @@ private:
   bool loading_ = true;
   bool error_ = false;
   bool signInPage_ = false;  // the preview's card-click page
+  bool filtersCollapsed_ = false, layingOut_ = false;
+  int lastScrollY_ = 0, scrollDirectionDistance_ = 0;
   std::optional<int> pickingId_;
   juce::String pickError_;
 
   BackLink back_;         // ← SELECT TONE: closes the browser
   BackLink signInBack_;   // the sign-in page's bare ←: back to the cards
 
-  // The 1x body: pinned search box and filter row, the scrolled column, the
+  // Search and the body hold 1x: collapsing filter row, the scrolled column, the
   // paginator pinned under it.
   std::unique_ptr<Body> body_;
   TextField search_;

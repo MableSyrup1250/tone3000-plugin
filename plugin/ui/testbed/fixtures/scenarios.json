@@ -31890,6 +31890,364 @@
      }
     ]
    }
+  },
+  {
+   "id": "artemis-pages-780-signin",
+   "extends": "load-oauth-device",
+   "drive": "load-oauth-device",
+   "deviceViewport": true,
+   "deviceWidth": 780,
+   "deviceHeight": 360,
+   "touch": true,
+   "houstonExport": true,
+   "localStorage": {
+    "t3k.updateNotice": "{\"snoozeUntil\":4102444800000}"
+   }
+  },
+  {
+   "id": "artemis-pages-780-browser",
+   "extends": "browser-search",
+   "drive": "browser-search",
+   "deviceViewport": true,
+   "deviceWidth": 780,
+   "deviceHeight": 360,
+   "touch": true,
+   "houstonExport": true,
+   "localStorage": {
+    "t3k.updateNotice": "{\"snoozeUntil\":4102444800000}"
+   }
+  },
+  {
+   "id": "artemis-pages-780-block",
+   "extends": "main-detail",
+   "drive": "main-detail",
+   "deviceViewport": true,
+   "deviceWidth": 780,
+   "deviceHeight": 360,
+   "touch": true,
+   "houstonExport": true,
+   "localStorage": {
+    "t3k.updateNotice": "{\"snoozeUntil\":4102444800000}"
+   }
+  },
+  {
+   "id": "artemis-pages-780-block-info",
+   "extends": "main-detail-info",
+   "drive": "main-detail-info",
+   "deviceViewport": true,
+   "deviceWidth": 780,
+   "deviceHeight": 360,
+   "touch": true,
+   "houstonExport": true,
+   "localStorage": {
+    "t3k.updateNotice": "{\"snoozeUntil\":4102444800000}"
+   }
+  },
+  {
+   "id": "artemis-pages-780-block-eq",
+   "extends": "main-detail-eq-sliders",
+   "drive": "main-detail-eq-sliders",
+   "deviceViewport": true,
+   "deviceWidth": 780,
+   "deviceHeight": 360,
+   "touch": true,
+   "houstonExport": true,
+   "localStorage": {
+    "t3k.updateNotice": "{\"snoozeUntil\":4102444800000}"
+   }
+  },
+  {
+   "id": "artemis-pages-780-settings",
+   "extends": "settings-plugin",
+   "drive": "settings-plugin",
+   "deviceViewport": true,
+   "deviceWidth": 780,
+   "deviceHeight": 360,
+   "touch": true,
+   "houstonExport": true,
+   "localStorage": {
+    "t3k.updateNotice": "{\"snoozeUntil\":4102444800000}"
+   },
+   "chain": {
+    "standalone": true
+   }
+  },
+  {
+   "id": "artemis-pages-780-system",
+   "extends": "settings-system",
+   "drive": "settings-system",
+   "deviceViewport": true,
+   "deviceWidth": 780,
+   "deviceHeight": 360,
+   "touch": true,
+   "houstonExport": true,
+   "localStorage": {
+    "t3k.updateNotice": "{\"snoozeUntil\":4102444800000}"
+   }
+  },
+  {
+   "id": "artemis-pages-1560-signin",
+   "extends": "load-oauth-device",
+   "drive": "load-oauth-device",
+   "deviceViewport": true,
+   "deviceWidth": 1560,
+   "deviceHeight": 720,
+   "touch": true,
+   "houstonExport": true,
+   "localStorage": {
+    "t3k.updateNotice": "{\"snoozeUntil\":4102444800000}"
+   }
+  },
+  {
+   "id": "artemis-pages-1560-browser",
+   "extends": "browser-search",
+   "drive": "browser-search",
+   "deviceViewport": true,
+   "deviceWidth": 1560,
+   "deviceHeight": 720,
+   "touch": true,
+   "houstonExport": true,
+   "localStorage": {
+    "t3k.updateNotice": "{\"snoozeUntil\":4102444800000}"
+   }
+  },
+  {
+   "id": "artemis-pages-1560-block",
+   "extends": "main-detail",
+   "drive": "main-detail",
+   "deviceViewport": true,
+   "deviceWidth": 1560,
+   "deviceHeight": 720,
+   "touch": true,
+   "houstonExport": true,
+   "localStorage": {
+    "t3k.updateNotice": "{\"snoozeUntil\":4102444800000}"
+   }
+  },
+  {
+   "id": "artemis-pages-1560-block-info",
+   "extends": "main-detail-info",
+   "drive": "main-detail-info",
+   "deviceViewport": true,
+   "deviceWidth": 1560,
+   "deviceHeight": 720,
+   "touch": true,
+   "houstonExport": true,
+   "localStorage": {
+    "t3k.updateNotice": "{\"snoozeUntil\":4102444800000}"
+   }
+  },
+  {
+   "id": "artemis-pages-1560-block-eq",
+   "extends": "main-detail-eq-sliders",
+   "drive": "main-detail-eq-sliders",
+   "deviceViewport": true,
+   "deviceWidth": 1560,
+   "deviceHeight": 720,
+   "touch": true,
+   "houstonExport": true,
+   "localStorage": {
+    "t3k.updateNotice": "{\"snoozeUntil\":4102444800000}"
+   }
+  },
+  {
+   "id": "artemis-pages-1560-settings",
+   "extends": "settings-plugin",
+   "drive": "settings-plugin",
+   "deviceViewport": true,
+   "deviceWidth": 1560,
+   "deviceHeight": 720,
+   "touch": true,
+   "houstonExport": true,
+   "localStorage": {
+    "t3k.updateNotice": "{\"snoozeUntil\":4102444800000}"
+   },
+   "chain": {
+    "standalone": true
+   }
+  },
+  {
+   "id": "artemis-pages-1560-system",
+   "extends": "settings-system",
+   "drive": "settings-system",
+   "deviceViewport": true,
+   "deviceWidth": 1560,
+   "deviceHeight": 720,
+   "touch": true,
+   "houstonExport": true,
+   "localStorage": {
+    "t3k.updateNotice": "{\"snoozeUntil\":4102444800000}"
+   }
+  },
+  {
+   "id": "artemis-pages-780-browser-collapsed",
+   "extends": "artemis-pages-780-browser",
+   "hasDrive": true,
+   "drive": "browser-scrolled"
+  },
+  {
+   "id": "artemis-pages-780-browser-keyboard",
+   "extends": "artemis-pages-780-browser",
+   "hasDrive": true,
+   "drive": "artemis-browser-keyboard",
+   "keyboard": true
+  },
+  {
+   "id": "artemis-pages-780-block-scrolled",
+   "extends": "artemis-pages-780-block",
+   "hasDrive": true,
+   "drive": "artemis-block-scrolled"
+  },
+  {
+   "id": "artemis-pages-1560-browser-collapsed",
+   "extends": "artemis-pages-1560-browser",
+   "hasDrive": true,
+   "drive": "browser-scrolled"
+  },
+  {
+   "id": "artemis-pages-1560-browser-keyboard",
+   "extends": "artemis-pages-1560-browser",
+   "hasDrive": true,
+   "drive": "artemis-browser-keyboard",
+   "keyboard": true
+  },
+  {
+   "id": "artemis-pages-1560-block-scrolled",
+   "extends": "artemis-pages-1560-block",
+   "hasDrive": true,
+   "drive": "artemis-block-scrolled"
+  },
+  {
+   "id": "artemis-drawer-780-eq",
+   "extends": "artemis-pages-780-block-eq",
+   "drive": "main-detail-eq-sliders",
+   "hasDrive": true
+  },
+  {
+   "id": "artemis-drawer-780-eq-curve",
+   "extends": "artemis-pages-780-block-eq",
+   "drive": "main-detail-eq-curve",
+   "hasDrive": true
+  },
+  {
+   "id": "artemis-drawer-780-eq-open",
+   "extends": "artemis-pages-780-block-eq",
+   "drive": "artemis-drawer-eq-open",
+   "hasDrive": true
+  },
+  {
+   "id": "artemis-drawer-780-info",
+   "extends": "artemis-pages-780-block-info",
+   "drive": "main-detail-info",
+   "hasDrive": true
+  },
+  {
+   "id": "artemis-drawer-780-info-scrolled",
+   "extends": "artemis-pages-780-block-info",
+   "drive": "artemis-drawer-info-scrolled",
+   "hasDrive": true
+  },
+  {
+   "id": "artemis-drawer-780-block",
+   "extends": "artemis-pages-780-block",
+   "drive": "main-detail",
+   "hasDrive": true
+  },
+  {
+   "id": "artemis-drawer-780-block-scrolled",
+   "extends": "artemis-pages-780-block",
+   "drive": "artemis-block-scrolled",
+   "hasDrive": true
+  },
+  {
+   "id": "artemis-drawer-780-block-open",
+   "extends": "artemis-pages-780-block",
+   "drive": "artemis-drawer-open",
+   "hasDrive": true
+  },
+  {
+   "id": "artemis-drawer-780-chain-open",
+   "extends": "artemis-layout-780-mono-pitch",
+   "drive": "main-mono",
+   "hasDrive": true,
+   "localStorage": {
+    "t3k.updateNotice": "{\"snoozeUntil\":4102444800000}"
+   }
+  },
+  {
+   "id": "artemis-drawer-780-chain-closed",
+   "extends": "artemis-layout-780-mono-pitch",
+   "drive": "artemis-drawer-closed",
+   "hasDrive": true,
+   "localStorage": {
+    "t3k.updateNotice": "{\"snoozeUntil\":4102444800000}"
+   }
+  },
+  {
+   "id": "artemis-drawer-1560-eq",
+   "extends": "artemis-pages-1560-block-eq",
+   "drive": "main-detail-eq-sliders",
+   "hasDrive": true
+  },
+  {
+   "id": "artemis-drawer-1560-eq-curve",
+   "extends": "artemis-pages-1560-block-eq",
+   "drive": "main-detail-eq-curve",
+   "hasDrive": true
+  },
+  {
+   "id": "artemis-drawer-1560-eq-open",
+   "extends": "artemis-pages-1560-block-eq",
+   "drive": "artemis-drawer-eq-open",
+   "hasDrive": true
+  },
+  {
+   "id": "artemis-drawer-1560-info",
+   "extends": "artemis-pages-1560-block-info",
+   "drive": "main-detail-info",
+   "hasDrive": true
+  },
+  {
+   "id": "artemis-drawer-1560-info-scrolled",
+   "extends": "artemis-pages-1560-block-info",
+   "drive": "artemis-drawer-info-scrolled",
+   "hasDrive": true
+  },
+  {
+   "id": "artemis-drawer-1560-block",
+   "extends": "artemis-pages-1560-block",
+   "drive": "main-detail",
+   "hasDrive": true
+  },
+  {
+   "id": "artemis-drawer-1560-block-scrolled",
+   "extends": "artemis-pages-1560-block",
+   "drive": "artemis-block-scrolled",
+   "hasDrive": true
+  },
+  {
+   "id": "artemis-drawer-1560-block-open",
+   "extends": "artemis-pages-1560-block",
+   "drive": "artemis-drawer-open",
+   "hasDrive": true
+  },
+  {
+   "id": "artemis-drawer-1560-chain-open",
+   "extends": "artemis-layout-1560-mono-pitch",
+   "drive": "main-mono",
+   "hasDrive": true,
+   "localStorage": {
+    "t3k.updateNotice": "{\"snoozeUntil\":4102444800000}"
+   }
+  },
+  {
+   "id": "artemis-drawer-1560-chain-closed",
+   "extends": "artemis-layout-1560-mono-pitch",
+   "drive": "artemis-drawer-closed",
+   "hasDrive": true,
+   "localStorage": {
+    "t3k.updateNotice": "{\"snoozeUntil\":4102444800000}"
+   }
   }
  ]
 }

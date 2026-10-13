@@ -25,6 +25,8 @@ public:
 
   // Launch the Select flow (add at an insert slot, or swap a tone block).
   std::function<void(ChainSide side, const std::string& targetBlockId)> onSelectTone;
+  std::function<void()> onDetailViewChanged;
+  bool detailShown() const { return detail_ != nullptr; }
 
   // Preset load / reset: close the detail view and rewind the gallery.
   void returnToGallery();

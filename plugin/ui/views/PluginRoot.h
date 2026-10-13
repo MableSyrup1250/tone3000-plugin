@@ -43,11 +43,13 @@
 #include "TunerView.h"
 #include "browser/ToneBrowser.h"
 #include "core/DelayedCall.h"
+#include "core/Tween.h"
 #include "modals/ConnectionModal.h"
 #include "modals/UpdateNotice.h"
 #include "settings/SettingsScreen.h"
 #include "services/Services.h"
 #include "widgets/Popover.h"
+#include "widgets/DrawerHandle.h"
 
 namespace t3k::ui {
 
@@ -136,6 +138,9 @@ private:
   // Which of main screen, faceplate, browser and sign-in screen show under
   // the takeovers.
   void syncTakeovers();
+  void resetDrawerForPage();
+  void setDrawerExpanded(bool expanded, bool animate);
+  bool inspectionPage();
 
   Services& services_;
   PluginHeader header_;
@@ -154,6 +159,9 @@ private:
   HintTracker hintTracker_;
   PointerTracker pointerTracker_;
   bool hintsVisible_ = true;
+  DrawerHandle drawerHandle_;
+  bool mainDrawerExpanded_ = true;
+  Tween drawerTween_{*this, [this](float) { resized(); }, 1.0f};
 
   BannerPhase bannerPhase_ = BannerPhase::hidden;
   DelayedCall bannerWait_;

@@ -41,6 +41,8 @@ public:
   bool refreshToneMetadata(const juce::String&) override { return true; }
   bool switchModel(const std::string&, int, const juce::var&) override { return true; }
   bool retryModelLoad(const std::string&) override { return true; }
+  bool canSaveToHouston() override { return houstonExport_; }
+  void saveModelToHouston(const std::string&, std::function<void(juce::var)> done) override { done(okResult()); }
   bool removeChainBlock(const std::string&) override { return true; }
   bool reorderChainBlocks(const std::vector<std::string>&) override { return true; }
   // Moves the block between lanes like the processor, and records the call
@@ -138,6 +140,7 @@ public:
   bool forwardKeyToHost(HostKey) override { return false; }
 
 private:
+  bool houstonExport_ = false;
   static juce::var okResult();
   void bumpChain();
   void notifyMidiMapChanged();

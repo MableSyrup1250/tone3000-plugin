@@ -28,6 +28,9 @@ ChainScreen::~ChainScreen() = default;
 void ChainScreen::openDetail(const std::string& blockId) {
   services_.prefs.session[UiPrefs::kDetailBlockId] = juce::String(blockId);
   detail_ = std::make_unique<BlockDetail>(services_, blockId);
+  detail_->onViewChanged = [this] {
+    if (onDetailViewChanged) onDetailViewChanged();
+  };
   // The card may ask to close from inside a chain listener callback (its
   // block vanished); tear it down once that callback has unwound.
   detail_->onBack = [this] {
@@ -45,6 +48,7 @@ void ChainScreen::openDetail(const std::string& blockId) {
   addAndMakeVisible(*detail_);
   gallery_.setVisible(false);
   resized();
+  if (onDetailViewChanged) onDetailViewChanged();
 }
 
 void ChainScreen::closeDetail() {
@@ -53,6 +57,7 @@ void ChainScreen::closeDetail() {
   detail_.reset();
   gallery_.setVisible(true);
   resized();
+  if (onDetailViewChanged) onDetailViewChanged();
 }
 
 void ChainScreen::returnToGallery() {

@@ -164,6 +164,20 @@ void BlockCard::buildHeader() {
   addAndMakeVisible(swap_);
   remove_.onClick = [this] { services_.chain.removeBlock(block_.blockId); };
   addAndMakeVisible(remove_);
+  save_.setName("Save to Houston");
+  save_.onClick = [this] {
+    savingToHouston_ = true;
+    syncHeader();
+    services_.toast.show("Saving to Houston...");
+    services_.backend.saveModelToHouston(block_.blockId, [safe = juce::Component::SafePointer(this)](juce::var result) {
+      if (safe == nullptr) return;
+      safe->savingToHouston_ = false;
+      safe->syncHeader();
+      const auto error = result["error"].toString();
+      safe->services_.toast.show(error.isNotEmpty() ? error : "Saved to Houston Imports");
+    });
+  };
+  addChildComponent(save_);
 }
 
 void BlockCard::buildBody() {
@@ -194,7 +208,7 @@ void BlockCard::buildBody() {
   body_.addAndMakeVisible(imageFrame_);
 
   meta_.onToggleFavorite = [this] { toggleFavorite(); };
-  meta_.onHeightChanged = [this] { setSize(kWidth, preferredHeight()); };
+  meta_.onHeightChanged = [this] { setSize(getWidth() > 0 ? getWidth() : kWidth, preferredHeight()); };
   meta_.info().onLogin = [this] {
     services_.connection.requireConnection([this] { services_.session.login(); });
   };
@@ -346,7 +360,10 @@ void BlockCard::syncHeader() {
   info_.setVisible(!isLocal());
   info_.setOpen(showInfo_);
   share_.setVisible(!isLocal());
-  layoutHeader(getLocalBounds().reduced(1).removeFromTop(kHeaderHeight));
+  save_.setVisible(services_.backend.canSaveToHouston());
+  save_.setEnabled(!savingToHouston_ && block_.loaded && !block_.modelLoading && !block_.loadFailed);
+  if (getWidth() > 0) setSize(getWidth(), preferredHeight());
+  layoutHeader(getLocalBounds().reduced(1).removeFromTop(headerHeight()));
 }
 
 void BlockCard::syncMeta() {
@@ -443,6 +460,7 @@ void BlockCard::setShowEq(bool show) {
     body_.addAndMakeVisible(*eqEditor_);
   }
   setBodyView();
+  if (onViewChanged) onViewChanged();
 }
 
 void BlockCard::setShowInfo(bool show) {
@@ -456,6 +474,7 @@ void BlockCard::setShowInfo(bool show) {
   }
   setBodyView();
   if (onInfoVisible) onInfoVisible(showInfo_);
+  if (onViewChanged) onViewChanged();
 }
 
 void BlockCard::setBodyView() {
@@ -469,24 +488,49 @@ void BlockCard::setBodyView() {
   meta_.setVisible(view != Body::eq);
   syncHeader();
   syncMeta();
-  setSize(kWidth, preferredHeight());
+  setSize(getWidth() > 0 ? getWidth() : kWidth, preferredHeight());
   resized();
 }
 
 int BlockCard::preferredHeight() {
-  if (body() != Body::info) return kHeight;
-  const int metaW = kWidth - 2 - 2 * kBodyPadding - kImageSizeInfo - kBodyGap;
+  if (body() == Body::eq)
+    return headerHeight() + juce::jlimit(180, kBodyHeight, availableHeight_ - headerHeight());
+  const int baseHeight = headerHeight() + kBodyHeight;
+  if (body() != Body::info) return baseHeight;
+  const int metaW = getWidth() - 2 - 2 * kBodyPadding - kImageSizeInfo - kBodyGap;
   const int bodyH = kBodyPadding + std::max(kImageSizeInfo, meta_.heightFor(metaW)) + kInfoBottomPad;
-  return std::max(kHeight, 1 + kHeaderHeight + bodyH + 1);
+  return std::max(baseHeight, 1 + headerHeight() + bodyH + 1);
+}
+
+void BlockCard::setNavigation(juce::Component& navigation) {
+  navigation_ = &navigation;
+  addAndMakeVisible(navigation);
+  resized();
+}
+
+int BlockCard::headerHeight() const {
+  // The expanded EQ tools keep their row with Back; power / model size
+  // only move below them when the two clusters actually need more room.
+  if (!navigation_) return kHeaderHeight;
+  constexpr int gap = 12;
+  int left = navigation_->getWidth() + gap + power_.getWidth();
+  if (size_ && size_->isVisible()) left += gap + size_->getWidth();
+  if (calibration_->isVisible()) left += gap + calibration_->getWidth();
+  int right = eq_.getWidth();
+  if (showEq_) right += eqPower_.getWidth() + preGroup_.getWidth() + eqView_->getWidth() +
+                        3 * kEqPillGap + kEqPillPadX;
+  for (const auto* button : {&remove_, &swap_, &save_, &share_, &info_})
+    if (button->isVisible()) right += button->getWidth() + gap;
+  return kHeaderHeight + (left + gap + right > getWidth() - 2 - 2 * kBodyPadding ? 32 : 0);
 }
 
 // Layout
 void BlockCard::resized() {
   auto inner = getLocalBounds().reduced(1);
-  layoutHeader(inner.removeFromTop(kHeaderHeight));
+  layoutHeader(inner.removeFromTop(headerHeight()));
 
   // The 275px body's last 2px hide under the card's bottom border.
-  const auto bodyArea = body() == Body::info ? inner : inner.withHeight(kBodyHeight);
+  const auto bodyArea = body() == Body::tone ? inner.withHeight(kBodyHeight) : inner;
   body_.setBounds(bodyArea);
   const auto local = body_.getLocalBounds();
   if (eqEditor_) eqEditor_->setBounds(local);
@@ -499,26 +543,36 @@ void BlockCard::resized() {
 
 void BlockCard::layoutHeader(juce::Rectangle<int> header) {
   const auto row = header.reduced(kBodyPadding, 0).withTrimmedBottom(1);  // the hairline is inside the 45
-  const int cy = row.getCentreY();
+  const int cy = row.getY() + (kHeaderHeight - 1) / 2;
+  const int gap = navigation_ ? 12 : kHeaderGap;
   auto centreAt = [cy](juce::Component& c, int x) { c.setTopLeftPosition(x, cy - c.getHeight() / 2); };
 
   // Left cluster.
   int x = row.getX();
-  centreAt(power_, x);
-  x += power_.getWidth() + kHeaderGap;
-  if (size_ && size_->isVisible()) {
-    centreAt(*size_, x);
-    x += size_->getWidth() + kHeaderGap;
+  if (navigation_) {
+    centreAt(*navigation_, x);
+    x += navigation_->getWidth() + gap;
   }
-  if (calibration_->isVisible()) centreAt(*calibration_, x);
+  const int clusterY = headerHeight() > kHeaderHeight ? cy + 32 : cy;
+  if (clusterY != cy) x = row.getX();
+  auto placeLeft = [clusterY](juce::Component& c, int left) {
+    c.setTopLeftPosition(left, clusterY - c.getHeight() / 2);
+  };
+  placeLeft(power_, x);
+  x += power_.getWidth() + gap;
+  if (size_ && size_->isVisible()) {
+    placeLeft(*size_, x);
+    x += size_->getWidth() + gap;
+  }
+  if (calibration_->isVisible()) placeLeft(*calibration_, x);
 
   // Right cluster, laid right to left; EQ stays rightmost in its pill so
   // opening grows left only.
   int right = row.getRight();
-  for (auto* b : std::initializer_list<juce::Component*>{&remove_, &swap_, &share_, &info_}) {
+  for (auto* b : std::initializer_list<juce::Component*>{&remove_, &swap_, &save_, &share_, &info_}) {
     if (!b->isVisible()) continue;
     centreAt(*b, right - b->getWidth());
-    right -= b->getWidth() + kHeaderGap;
+    right -= b->getWidth() + gap;
   }
   if (showEq_) {
     // Pill: [power][PRE][view] EQ, padded 4/12, pulled back by its right
@@ -604,7 +658,7 @@ int BlockCard::layoutInfoBody(juce::Rectangle<int> body) {
 void BlockCard::paint(juce::Graphics& g) {
   // Header hairline (inside the 45).
   g.setColour(theme::kBorder);
-  g.fillRect(1, 1 + kHeaderHeight - 1, getWidth() - 2, 1);
+  g.fillRect(1, headerHeight(), getWidth() - 2, 1);
   if (showEq_) {
     g.setColour(theme::kSegmentedTrack);
     g.fillRoundedRectangle(eqPill_.getBounds().toFloat(), eqPill_.getHeight() / 2.0f);
@@ -631,7 +685,7 @@ void BlockCard::fetchInfo(bool background) {
     infoLoading_ = true;
     infoError_.clear();
     syncMeta();
-    setSize(kWidth, preferredHeight());
+    setSize(getWidth() > 0 ? getWidth() : kWidth, preferredHeight());
   }
   const int toneId = block_.tone.id;
   services_.session.getTone(
@@ -654,7 +708,7 @@ void BlockCard::fetchInfo(bool background) {
           infoError_ = "Failed to load tone details.";
         }
         syncMeta();
-        setSize(kWidth, preferredHeight());
+        setSize(getWidth() > 0 ? getWidth() : kWidth, preferredHeight());
         resized();
       }));
 }

@@ -58,12 +58,18 @@ PluginRoot::PluginRoot(Services& services)
   services_.session.onAuthenticated = [this] { setBrowserShown(true); };
 
   header_.onOpenSettings = [this] { openSettings(); };
+  main_.chainScreen().onDetailViewChanged = [this] { resetDrawerForPage(); };
+  drawerHandle_.onExpansionRequested = [this](bool expanded) {
+    if (!inspectionPage()) mainDrawerExpanded_ = expanded;
+    setDrawerExpanded(expanded, true);
+  };
 
   addAndMakeVisible(header_);
   addAndMakeVisible(main_);
   addAndMakeVisible(faceplate_);
   addChildComponent(hintBar_);
   addChildComponent(banner_);
+  addChildComponent(drawerHandle_);
 
   // Popovers, toast and modals sit above everything; the layer itself is
   // click-through.
@@ -150,6 +156,7 @@ void PluginRoot::authFlowChanged() {
       self->signIn_.reset();
     }
     self->syncTakeovers();
+    self->resetDrawerForPage();
     self->resized();
   });
 }
@@ -337,6 +344,7 @@ void PluginRoot::setTunerShown(bool shown) {
     tuner_.reset();
   }
   syncTakeovers();
+  resetDrawerForPage();
   header_.setTunerShown(shown);
   resized();
 }
@@ -362,6 +370,7 @@ void PluginRoot::setBrowserShown(bool shown) {
     browser_.reset();
   }
   syncTakeovers();
+  resetDrawerForPage();
   resized();
 }
 
@@ -371,9 +380,23 @@ void PluginRoot::syncTakeovers() {
   const bool tuner = tunerShown(), browser = browserShown(), signIn = signInShown();
   const bool column = browser || signIn;  // something covers the whole column
   main_.setVisible(!tuner && !column);
-  faceplate_.setVisible(tuner || !column);
+  faceplate_.setVisible(deviceViewport_ ? drawerTween_.value() > 0 : tuner || !column);
   if (browser_) browser_->setVisible(!tuner && !signIn);
   if (signIn_) signIn_->setVisible(!tuner);
+}
+
+bool PluginRoot::inspectionPage() {
+  return !tunerShown() && (browserShown() || signInShown() || main_.chainScreen().detailShown());
+}
+
+void PluginRoot::resetDrawerForPage() {
+  if (deviceViewport_) setDrawerExpanded(!inspectionPage() && mainDrawerExpanded_, false);
+}
+
+void PluginRoot::setDrawerExpanded(bool expanded, bool animate) {
+  drawerHandle_.setExpanded(expanded);
+  if (animate) drawerTween_.animateTo(expanded ? 1.0f : 0.0f, 160);
+  else drawerTween_.snap(expanded ? 1.0f : 0.0f);
 }
 
 void PluginRoot::closeTunerThen(const std::function<void()>& fn) {
@@ -401,12 +424,14 @@ void PluginRoot::logout() {
 void PluginRoot::paint(juce::Graphics& g) { g.fillAll(theme::kBlack); }
 
 void PluginRoot::setDeviceViewport(juce::Rectangle<int> bounds) {
+  const bool first = !deviceViewport_;
   deviceViewport_ = true;
   header_.setDeviceViewport(true);
   faceplate_.setDeviceViewport(true);
   main_.chainScreen().gallery().setDeviceViewport(true);
   setTransform({});
   setBounds(bounds);
+  if (first) resetDrawerForPage();
   resized();
 }
 
@@ -422,6 +447,7 @@ void PluginRoot::openSettings(SettingsScreen::Tab tab) {
   addChildComponent(*settings_);
   settings_->toBehind(&overlay_);
   settings_->setVisible(true);
+  drawerHandle_.setVisible(false);
   services_.hints.setHover({});
 }
 
@@ -429,7 +455,10 @@ void PluginRoot::closeSettings() {
   if (settings_ == nullptr) return;
   // Deferred: the close click comes from a button inside the screen.
   juce::MessageManager::callAsync([safe = juce::Component::SafePointer<PluginRoot>(this)] {
-    if (safe != nullptr) safe->settings_.reset();
+    if (safe != nullptr) {
+      safe->settings_.reset();
+      safe->resized();
+    }
   });
 }
 
@@ -447,6 +476,27 @@ void PluginRoot::resized() {
   const int hintH = hintsVisible_ ? design::kHintHeight : 0;
   const int columnH = deviceViewport_ ? getHeight() - slotH : design::kHeight + hintH;
   auto column = juce::Rectangle<int>(0, slotH, getWidth(), columnH);
+  if (deviceViewport_) {
+    header_.setBounds(column.removeFromTop(PluginHeader::kDeviceHeight));
+    const int extent = Faceplate::kDeviceHeight + hintH;
+    const int drawerHeight = juce::roundToInt(extent * drawerTween_.value());
+    const int drawerTop = column.getBottom() - drawerHeight;
+    faceplate_.setBounds(0, drawerTop, getWidth(), Faceplate::kDeviceHeight);
+    hintBar_.setBounds(0, drawerTop + Faceplate::kDeviceHeight, getWidth(), hintH);
+    faceplate_.setVisible(drawerHeight > 0);
+    hintBar_.setVisible(hintsVisible_ && drawerHeight > 0);
+    column.removeFromBottom(drawerHeight + DrawerHandle::kHeight);
+    drawerHandle_.setBounds((getWidth() - DrawerHandle::kWidth) / 2, column.getBottom(),
+                            DrawerHandle::kWidth, DrawerHandle::kHeight);
+    drawerHandle_.setVisible(settings_ == nullptr);
+    if (browser_) browser_->setBounds(column);
+    if (signIn_) signIn_->setBounds(column);
+    main_.setBounds(column);
+    if (tuner_) tuner_->setBounds(column);
+    // Status messages remain above the handle, even when CPU/hints are hidden.
+    toast_.setBottomOffset(drawerHeight + DrawerHandle::kHeight + kToastGap);
+    return;
+  }
   if (hintsVisible_) hintBar_.setBounds(column.removeFromBottom(hintH));
   header_.setBounds(column.removeFromTop(deviceViewport_ ? PluginHeader::kDeviceHeight : PluginHeader::kHeight));
   if (browser_) browser_->setBounds(column);  // the rest, faceplate included
