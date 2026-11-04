@@ -14,7 +14,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (NOT TARGET juce::juce_core)
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../../libs/juce" juce EXCLUDE_FROM_ALL)
+    # Match the versioned checkout used by the plugin's root CMake project.
+    set(T3K_JUCE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../libs/juce-9.0.3" CACHE PATH "JUCE source for the standalone testbed")
+    add_subdirectory("${T3K_JUCE_SOURCE_DIR}" juce EXCLUDE_FROM_ALL)
 endif()
 
 juce_add_gui_app(UiTestbed PRODUCT_NAME "UiTestbed" COMPANY_NAME "TONE3000")
