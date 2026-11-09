@@ -37,6 +37,8 @@ struct AudioDeviceState {
   double sampleRate = 0;
   std::vector<int> bufferSizes;
   int bufferSize = 0;
+  int bufferSizeAfterReboot = 0;
+  bool bufferSizeRequiresReboot = false;
   bool hasControlPanel = false;
   bool hearYourself = true;
   bool feedbackRisk = false;

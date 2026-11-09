@@ -30,6 +30,9 @@ std::vector<SelectField::Option> deviceOptions(const std::vector<juce::String>& 
 
 // Captions vary by backend, per the UX spec.
 juce::String bufferCaption(const AudioDeviceState& s) {
+  if (s.bufferSizeRequiresReboot)
+    return "Shared with Houston / Guitarix. Applies after reboot. Active: " +
+           juce::String(s.bufferSize) + " frames.";
   if (s.bufferSizes.size() <= 1)
     return s.currentType == "JACK" ? "Set by the JACK server. Change it in qjackctl or PipeWire."
                                    : "Set by the audio driver.";
@@ -378,7 +381,7 @@ void SystemSettingsPage::sync() {
     for (int samples : s.bufferSizes)
       sizes.push_back({juce::String(samples), formatBufferOption(samples, s.sampleRate, s.bufferSizes.size() > 1), {}});
     bufferSelect_.setOptions(std::move(sizes));
-    bufferSelect_.setValue(juce::String(s.bufferSize));
+    bufferSelect_.setValue(juce::String(s.bufferSizeRequiresReboot ? s.bufferSizeAfterReboot : s.bufferSize));
     bufferSelect_.setDisabled(s.bufferSizes.size() <= 1);
     const auto caption = bufferCaption(s);
     bufferCaption_.setText(caption);

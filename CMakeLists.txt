@@ -484,6 +484,19 @@ endif()
 set(_juce_adm_cpp "${T3K_JUCE_SOURCE_DIR}/modules/juce_audio_devices/audio_io/juce_AudioDeviceManager.cpp")
 if (EXISTS "${_juce_adm_cpp}")
     file(READ "${_juce_adm_cpp}" _juce_adm_src)
+    # Restrict audio before the standalone restores saved device settings.
+    # JUCE_ALSA=0 would also disable ALSA MIDI, so omit only the audio type.
+    if (NOT _juce_adm_src MATCHES "T3K_ARTEMIS_JACK_ONLY")
+        set(_artemis_alsa_type "    addIfNotNull (list, AudioIODeviceType::createAudioIODeviceType_ALSA());")
+        string(FIND "${_juce_adm_src}" "${_artemis_alsa_type}" _artemis_alsa_index)
+        if (_artemis_alsa_index EQUAL -1)
+            message(FATAL_ERROR "T3K_ARTEMIS_JACK_ONLY: JUCE audio type registration changed")
+        endif()
+        string(REPLACE "${_artemis_alsa_type}"
+            "   #if ! T3K_ARTEMIS_KIOSK // T3K_ARTEMIS_JACK_ONLY: keep ALSA MIDI available\n${_artemis_alsa_type}\n   #endif"
+            _juce_adm_src "${_juce_adm_src}")
+        file(WRITE "${_juce_adm_cpp}" "${_juce_adm_src}")
+    endif()
     if (NOT _juce_adm_src MATCHES "T3K_AUDIO_DEFAULT_SETUP")
         set(_juce_adm_old
 [=[static double getDefaultRequestedSampleRate (AudioIODevice& device)

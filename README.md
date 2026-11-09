@@ -109,6 +109,14 @@ keeping the code visible on the display. The installed JACK server and audio
 device settings remain managed by Launchpad. Artemis' OS build wrapper passes
 the publishable key to CMake and targets the CM5's Cortex-A76 CPU.
 
+Artemis offers JACK audio only, with a shared **32-frame (default)** or
+**64-frame** buffer preference. Both this selector and Launchpad's Advanced
+Features save `/data/artemis/config/jack-buffer-size` (or
+`ARTEMIS_JACK_BUFFER_FILE`). The selector shows the choice for the next reboot;
+the caption and latency readout show the active device buffer. Saving never
+reopens the device or resizes JACK. Houston / Guitarix and other JACK clients
+use the same boot-time size. ALSA MIDI remains available for controllers.
+
 The device layout keeps the 13:6 panel aspect ratio at both 1560×720 and
 780×360 logical pixels. Its compact header, 75% control row, and smaller
 NAM/IR tiles leave room for both stereo lanes, including when pitch, gate,

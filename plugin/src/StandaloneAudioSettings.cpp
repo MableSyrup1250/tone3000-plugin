@@ -24,6 +24,20 @@ namespace {
 constexpr double kPreferredSampleRate = 48000.0;
 constexpr int kPreferredBufferSize = 128;
 
+#if T3K_ARTEMIS_KIOSK
+juce::File artemisBufferPreference() {
+  return juce::File(juce::SystemStats::getEnvironmentVariable(
+      "ARTEMIS_JACK_BUFFER_FILE", "/data/artemis/config/jack-buffer-size"));
+}
+
+int artemisSelectedBufferSize(int active) {
+  const auto saved = artemisBufferPreference().loadFileAsString().trim();
+  if (saved == "32" || saved == "64")
+    return saved.getIntValue();
+  return active > 0 ? active : 32;
+}
+#endif
+
 // The plugin consumes at most a stereo pair, so channel selection is a
 // min-1 / max-2 window over the device's inputs (JUCE selector semantics)
 // and outputs collapse to stereo pairs.
@@ -199,8 +213,13 @@ juce::var StandaloneAudioSettings::getState() {
   juce::var state(obj);
 
   juce::Array<juce::var> types;
-  for (auto* type : dm->getAvailableDeviceTypes())
+  for (auto* type : dm->getAvailableDeviceTypes()) {
+#if T3K_ARTEMIS_KIOSK
+    if (type->getTypeName() != "JACK")
+      continue;
+#endif
     types.add(type->getTypeName());
+  }
   obj->setProperty("deviceTypes", types);
   obj->setProperty("currentType", dm->getCurrentAudioDeviceType());
 
@@ -276,6 +295,14 @@ juce::var StandaloneAudioSettings::getState() {
   obj->setProperty("bufferSizes", bufferSizes);
   obj->setProperty("sampleRate", device != nullptr ? device->getCurrentSampleRate() : 0.0);
   obj->setProperty("bufferSize", device != nullptr ? device->getCurrentBufferSizeSamples() : 0);
+#if T3K_ARTEMIS_KIOSK
+  // Native JACK has one size for every client. Save a boot preference only;
+  // never reopen the device or resize the server from this control.
+  obj->setProperty("bufferSizes", juce::Array<juce::var>{32, 64});
+  obj->setProperty("bufferSizeAfterReboot", artemisSelectedBufferSize(
+      device != nullptr ? device->getCurrentBufferSizeSamples() : 0));
+  obj->setProperty("bufferSizeRequiresReboot", true);
+#endif
 
   obj->setProperty("hasControlPanel", device != nullptr && device->hasControlPanel());
   obj->setProperty("hearYourself",
@@ -312,6 +339,10 @@ juce::var StandaloneAudioSettings::getState() {
 // Setters
 
 juce::var StandaloneAudioSettings::setDeviceType(const juce::String& typeName) {
+#if T3K_ARTEMIS_KIOSK
+  if (typeName != "JACK")
+    return makeResult("Artemis uses JACK audio only.");
+#endif
   auto* dm = deviceManager();
   if (dm == nullptr)
     return makeResult("Audio settings are unavailable.");
@@ -472,6 +503,28 @@ juce::var StandaloneAudioSettings::setSampleRate(double rate) {
 }
 
 juce::var StandaloneAudioSettings::setBufferSize(int samples) {
+#if T3K_ARTEMIS_KIOSK
+  if (samples != 32 && samples != 64)
+    return makeResult("JACK buffer size must be 32 or 64 frames.");
+  const auto preference = artemisBufferPreference();
+  const auto created = preference.getParentDirectory().createDirectory();
+  if (created.failed())
+    return makeResult("Unable to save JACK buffer size.");
+  juce::TemporaryFile temporary(preference);
+  {
+    juce::FileOutputStream output(temporary.getFile());
+    if (!output.openedOk() || !output.writeText(juce::String(samples) + "\n", false, false, "\n"))
+      return makeResult("Unable to save JACK buffer size.");
+    output.flush();
+    if (output.getStatus().failed())
+      return makeResult("Unable to save JACK buffer size.");
+  }
+  if (!temporary.overwriteTargetFileWithTemporary())
+    return makeResult("Unable to save JACK buffer size.");
+  if (onDeviceStateChanged)
+    onDeviceStateChanged();
+  return makeResult({});
+#else
   auto* dm = deviceManager();
   if (dm == nullptr)
     return makeResult("Audio settings are unavailable.");
@@ -480,6 +533,7 @@ juce::var StandaloneAudioSettings::setBufferSize(int samples) {
   pinActiveChannels(setup, dm->getCurrentAudioDevice(), explicitInputChannels, explicitOutputChannels,
                     /*pinInputs=*/true, /*pinOutputs=*/true);
   return finishApply(dm->setAudioDeviceSetup(setup, true));
+#endif
 }
 
 juce::var StandaloneAudioSettings::setHearYourself(bool hear) {
