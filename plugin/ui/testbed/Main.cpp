@@ -21,6 +21,9 @@
 #include "SelfTests.h"
 #include "core/Design.h"
 #include "views/PluginRoot.h"
+#if T3K_TEST_ARTEMIS_KEYBOARD
+#include "JuceKeyboard.h"
+#endif
 
 namespace t3k::ui::testbed {
 
@@ -57,6 +60,18 @@ juce::Image captureScenario(const Scenario& scenario, const juce::var& fixtures,
   ScaledHost host(backend, scenario, fixtures);
   auto& root = host.pluginRoot();
 
+#if T3K_TEST_ARTEMIS_KEYBOARD
+  std::unique_ptr<artemis::osk::JuceKeyboard> keyboard;
+  std::unique_ptr<juce::DocumentWindow> window;
+  if (static_cast<bool>(scenario.data.getProperty("keyboard", false))) {
+    keyboard = std::make_unique<artemis::osk::JuceKeyboard>(host, root);
+    host.addChildComponent(*keyboard);
+    window = std::make_unique<juce::DocumentWindow>("Keyboard capture", juce::Colours::black, 0);
+    window->setContentNonOwned(&host, true);
+    window->setVisible(true);
+  }
+#endif
+
   auto* mm = juce::MessageManager::getInstance();
   mm->runDispatchLoopUntil(500);  // let the first async loads (images, chain) land
   if (const auto* drive = driveFor(scenario.driveId())) {
@@ -66,7 +81,8 @@ juce::Image captureScenario(const Scenario& scenario, const juce::var& fixtures,
   }
   mm->runDispatchLoopUntil(scenario.settleMs());
   unnamed = drive::unnamedFocusables(root);
-  return root.createComponentSnapshot(root.getLocalBounds(), true, 2.0f);
+  const float scale = scenario.deviceViewport() ? static_cast<float>(design::kArtemisWidth) / host.getWidth() : 2.0f;
+  return host.createComponentSnapshot(host.getLocalBounds(), true, scale);
 }
 
 int runCapture(const juce::StringArray& args) {

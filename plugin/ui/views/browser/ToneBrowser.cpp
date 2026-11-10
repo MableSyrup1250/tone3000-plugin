@@ -100,16 +100,22 @@ ToneBrowser::ToneBrowser(Services& services)
   search_.setText(state_.query.text);
   search_.onEnter = [this] { submit(); };
   search_.onClear = [this] { submit(); };
+  search_.onFocus = [this] {
+    filtersCollapsed_ = false;
+    scrollDirectionDistance_ = 0;
+    layoutBody();
+  };
   search_.onEscape = [this] {
     search_.setText({});
     submit();
   };
-  body_->addChildComponent(search_);
+  addChildComponent(search_);
 
   filters_.onChange = [this] { queryChanged(); };
   body_->addChildComponent(filters_);
 
   scroller_->setViewedComponent(content_.get(), false);
+  scroller_->onScroll = [this] { scrolled(); };
   body_->addAndMakeVisible(*scroller_);
   content_->addChildComponent(dots_);
   paginator_.onPageChange = [this](int page) { setPage(page); };
@@ -370,14 +376,21 @@ void ToneBrowser::resized() {
   // Design space: the ← row, and the box the body fills under it.
   const int w = getWidth();
   const int colW = std::max(0, w - 2 * kPadX);
-  back_.setTopLeftPosition((w - colW) / 2, kPadTop);
+  const int rowH = search_.isVisible() ? std::max(BackLink::kHeight, juce::roundToInt(kSearchHeight / zoom()))
+                                     : BackLink::kHeight;
+  back_.setTopLeftPosition((w - colW) / 2, kPadTop + (rowH - BackLink::kHeight) / 2);
   signInBack_.setTopLeftPosition((w - colW) / 2, kPadTop);
-  const int top = kPadTop + BackLink::kHeight;
+  const int top = kPadTop + rowH;
   const int h = std::max(0, getHeight() - top);
 
   // The body holds 1x on screen: counter-scaled by the zoom and sized in
   // screen pixels over that box.
   const float z = zoom();
+  // Keep search at 1x, alongside the back link, above the on-screen keyboard.
+  search_.setTransform(juce::AffineTransform::scale(1 / z));
+  const int searchX = back_.getRight() + kHeaderGap;
+  search_.setBounds(juce::roundToInt(searchX * z), juce::roundToInt(kPadTop * z),
+                    std::max(0, juce::roundToInt((w - kPadX - searchX) * z)), kSearchHeight);
   body_->setTransform(juce::AffineTransform::scale(1 / z).translated(0, static_cast<float>(top)));
   body_->setBounds(0, 0, juce::roundToInt(w * z), juce::roundToInt(h * z));
   layoutBody();
@@ -386,15 +399,12 @@ void ToneBrowser::resized() {
 // Screen pixels from here down. The column fills the available width,
 // leaving the same design-space padding under the zoom.
 void ToneBrowser::layoutBody() {
+  const juce::ScopedValueSetter<bool> guard(layingOut_, true);
   const int w = body_->getWidth(), h = body_->getHeight();
   const int colW = std::max(0, w - juce::roundToInt(2 * kPadX * zoom()));
   const int colX = (w - colW) / 2;
   int y = 0;
-  if (search_.isVisible()) {
-    y += kHeaderGap;
-    search_.setBounds(colX, y, colW, kSearchHeight);
-    y += kSearchHeight;
-  }
+  filters_.setVisible(!signInPage_ && !filtersCollapsed_);
   if (filters_.isVisible()) {
     y += kHeaderGap;
     filters_.setColumn({colX, y, colW, FilterBar::kHeight});
@@ -409,6 +419,27 @@ void ToneBrowser::layoutBody() {
   }
   scroller_->setBounds(0, y, w, std::max(0, bottom - y));
   layoutContent();
+  lastScrollY_ = scroller_->getViewPositionY();
+}
+
+void ToneBrowser::scrolled() {
+  body_->repaint();
+  if (layingOut_) return;
+  const int y = scroller_->getViewPositionY();
+  const int delta = y - lastScrollY_;
+  lastScrollY_ = y;
+  if ((delta > 0) != (scrollDirectionDistance_ > 0)) scrollDirectionDistance_ = 0;
+  scrollDirectionDistance_ += delta;
+  // Hysteresis ignores trackpad jitter. Only collapse a list that will
+  // remain scrollable after making room, so an upward gesture can restore it.
+  const bool canCollapse = content_->getHeight() > scroller_->getHeight() + FilterBar::kHeight + kHeaderGap + 64;
+  const bool collapse = y > 0 && !search_.hasKeyboardFocus(true) &&
+                        (filtersCollapsed_ ? scrollDirectionDistance_ > -24 : canCollapse && scrollDirectionDistance_ > 24);
+  if (collapse != filtersCollapsed_) {
+    filtersCollapsed_ = collapse;
+    scrollDirectionDistance_ = 0;
+    layoutBody();
+  }
 }
 
 // Scrolled cards fade out under the filter row and the paginator instead

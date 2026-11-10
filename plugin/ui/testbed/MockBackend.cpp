@@ -119,7 +119,8 @@ struct MockBackend::Params : juce::AudioProcessor {
 };
 
 MockBackend::MockBackend(const juce::var& scenario)
-    : params_(std::make_unique<Params>(scenario)),
+    : houstonExport_(static_cast<bool>(scenario.getProperty("houstonExport", false))),
+      params_(std::make_unique<Params>(scenario)),
       chain_(scenario["chain"].isObject() ? scenario["chain"] : defaultChain()),
       device_(scenario["device"]),
       midiMap_(scenario["midiMap"].isObject()

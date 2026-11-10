@@ -1,3 +1,4 @@
+#include "core/ExternalLinks.h"
 #include "Tone3000Session.h"
 
 #include <juce_events/juce_events.h>
@@ -219,7 +220,7 @@ void Tone3000Session::setFlow(AuthFlow::Phase phase, juce::String error) {
 void Tone3000Session::clearAuthError() { setFlow(AuthFlow::Phase::idle); }
 
 juce::String Tone3000Session::openBrowser(const juce::String& url) {
-  return juce::URL(url).launchInDefaultBrowser() ? juce::String() : juce::String(kBrowserFailed);
+  return openExternalLink(url) ? juce::String() : juce::String(kBrowserFailed);
 }
 
 void Tone3000Session::login(LoginIntent intent) {

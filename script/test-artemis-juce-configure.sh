@@ -41,6 +41,7 @@ grep -qF 'T3K_AUDIO_DEFAULT_SETUP' "$isolated_juce/modules/juce_audio_devices/au
 grep -qF 'T3K_ALSA_CLOSE_STUCK_TIMEOUT' "$isolated_juce/modules/juce_audio_devices/native/juce_ALSA_linux.cpp"
 grep -qF 'T3K_X11_HINT_OVERFLOW' "$isolated_juce/modules/juce_gui_basics/native/juce_XWindowSystem_linux.cpp"
 grep -qF 'T3K_ARTEMIS_KIOSK_WINDOW' "$isolated_juce/modules/juce_audio_plugin_client/juce_audio_plugin_client_Standalone.cpp"
+grep -qF 'T3K_ARTEMIS_XDG_CONFIG' "$isolated_juce/modules/juce_core/native/juce_Files_linux.cpp"
 grep -qF 'window->setUsingNativeTitleBar (false)' "$isolated_juce/modules/juce_audio_plugin_client/juce_audio_plugin_client_Standalone.cpp"
 grep -qF 'mainWindow->setFullScreen (true)' "$isolated_juce/modules/juce_audio_plugin_client/juce_audio_plugin_client_Standalone.cpp"
 [ "$(fingerprint)" = "$before" ] || {

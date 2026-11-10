@@ -737,9 +737,15 @@ std::pair<double, double> BlockEqView::freqRange(int index) const {
 void BlockEqView::paint(juce::Graphics& g) { g.fillAll(theme::kBlack); }
 
 void BlockEqView::resized() {
+  // The graph, spectrum and hit targets share a fixed coordinate system.
+  // Scale all layers together: resizing their bounds alone clips the high
+  // bands on a narrow card and the frequency labels on a short one.
   for (auto* layer : {grid_.get(), spectrum_.get(), static_cast<juce::Component*>(graph_.get()),
-                      static_cast<juce::Component*>(sliders_.get())})
-    layer->setBounds(getLocalBounds());
+                      static_cast<juce::Component*>(sliders_.get())}) {
+    layer->setBounds(0, 0, eq::kGraphW, eq::kBodyH);
+    layer->setTransform(juce::AffineTransform::scale(static_cast<float>(getWidth()) / eq::kGraphW,
+                                                     static_cast<float>(getHeight()) / eq::kBodyH));
+  }
 }
 
 }  // namespace t3k::ui

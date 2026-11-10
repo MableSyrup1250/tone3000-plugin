@@ -1,3 +1,4 @@
+#include "core/ExternalLinks.h"
 #include "UpdateNotice.h"
 
 #include <cmath>
@@ -49,8 +50,8 @@ public:
         close_(Icon::X, theme::kIconBoxSize, 16) {
     setOpaque(false);
     message_.setText(Html::toRichText(info.messageHtml));
-    message_.onLink = [](const juce::String& href) { juce::URL(href).launchInDefaultBrowser(); };
-    download_.onClick = [url = info.url] { juce::URL(url).launchInDefaultBrowser(); };
+    message_.onLink = [](const juce::String& href) { openExternalLink(href); };
+    download_.onClick = [url = info.url] { openExternalLink(url); };
     close_.setActive(false);
     close_.setName("Close");
     close_.onClick = [this] { owner_.remind(kDismissDays); };

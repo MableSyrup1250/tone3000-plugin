@@ -5,6 +5,7 @@
 
 #include "Drive.h"
 #include "views/PluginRoot.h"
+#include "views/block/BlockDetail.h"
 #include "views/browser/FilterChip.h"
 #include "widgets/DbMeter.h"
 #include "widgets/DragScroller.h"
@@ -258,6 +259,45 @@ const std::map<juce::String, Drive>& drives() {
          submit(root, juce::String::fromUTF8("Search\xe2\x80\xa6"), "vox");
          wait(400);
          unhover(root);
+       }},
+      {"artemis-browser-keyboard",
+       [](PluginRoot& root, MockBackend&) {
+         if (auto* field = inputWithPlaceholder(root, juce::String::fromUTF8("Search\xe2\x80\xa6"))) {
+           field->setText("vox", true);
+           field->grabKeyboardFocus();
+         }
+         wait(100);
+       }},
+      {"artemis-block-scrolled",
+       [](PluginRoot& root, MockBackend&) {
+         if (auto* detail = find(root, [](juce::Component& c) { return dynamic_cast<BlockDetail*>(&c) != nullptr; }))
+           if (auto* scroller = dynamic_cast<DragScroller*>(find(*detail, [](juce::Component& c) {
+                 return dynamic_cast<DragScroller*>(&c) != nullptr;
+               }))) scroller->setViewPosition(0, 10000);
+         wait(100);
+       }},
+      {"artemis-drawer-open",
+       [](PluginRoot& root, MockBackend&) {
+         if (auto* handle = buttonNamed(root, "Show controls and CPU")) click(root, *handle);
+         wait(250);
+         unhover(root);
+       }},
+      {"artemis-drawer-closed",
+       [](PluginRoot& root, MockBackend&) {
+         if (auto* handle = buttonNamed(root, "Hide controls and CPU")) click(root, *handle);
+         wait(250);
+         unhover(root);
+       }},
+      {"artemis-drawer-info-scrolled",
+       [](PluginRoot& root, MockBackend& backend) {
+         (*driveFor("main-detail-info"))(root, backend);
+         (*driveFor("artemis-block-scrolled"))(root, backend);
+         unhover(root);
+       }},
+      {"artemis-drawer-eq-open",
+       [](PluginRoot& root, MockBackend& backend) {
+         (*driveFor("main-detail-eq-sliders"))(root, backend);
+         (*driveFor("artemis-drawer-open"))(root, backend);
        }},
       {"browser-gear",
        [](PluginRoot& root, MockBackend&) {

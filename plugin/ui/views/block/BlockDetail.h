@@ -1,8 +1,7 @@
 // The detail takeover (ChainView.tsx's detail branch + ChainBlock.tsx's
-// outer column): ← BLOCK above the bordered card, centred in the chain
-// area under the shared 24px pad. The tone / EQ views sit fixed; the info
-// view moves the pads into a scrolling column so ← BLOCK and the card can
-// reach the plugin header and faceplate. Follows the block through chain
+// outer column): Back shares the card's action row, centred between the
+// input/output meters. Every view scrolls when its contents exceed the
+// available height. Follows the block through chain
 // resyncs and falls back to the gallery when it vanishes (undo, trash).
 #pragma once
 
@@ -23,16 +22,16 @@ namespace t3k::ui {
 class BlockDetail : public juce::Component, private ChainStore::Listener, private juce::ComponentListener {
 public:
   static constexpr int kPadY = 24;
-  static constexpr int kBackGap = 16;
 
   BlockDetail(Services& services, const std::string& blockId);
   ~BlockDetail() override;
 
 
-  // ← BLOCK, or the block disappeared underneath us.
+  // Back, or the block disappeared underneath us.
   std::function<void()> onBack;
   // The card's ⇄: swap this block's tone.
   std::function<void(const std::string& blockId)> onSwap;
+  std::function<void()> onViewChanged;
 
   void resized() override;
 
@@ -50,7 +49,7 @@ private:
   juce::Component column_;
   std::unique_ptr<BackLink> back_;
   std::unique_ptr<BlockCard> card_;
-  bool infoOpen_ = false;
+  bool layingOut_ = false;
 };
 
 }  // namespace t3k::ui

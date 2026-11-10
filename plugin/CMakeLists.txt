@@ -390,6 +390,8 @@ if (NOT HEADLESS)
             ui/backend/ProcessorBackend.cpp
             ui/NativeEditor.h
             ui/NativeEditor.cpp
+            include/ArtemisKioskWindow.h
+            src/ArtemisKioskWindow.cpp
     )
     if (T3K_BUILD_UI_TESTBED AND NOT T3K_IOS)
         add_subdirectory(ui/testbed)

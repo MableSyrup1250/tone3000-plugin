@@ -1,3 +1,4 @@
+#include "core/ExternalLinks.h"
 #include "PluginHeader.h"
 
 #include "core/Brand.h"
@@ -28,7 +29,7 @@ public:
   LogoLink() : Clickable({}) {
     setTitle("TONE3000");  // tone3000.com, to a screen reader
     setMouseCursor(juce::MouseCursor::PointingHandCursor);
-    onClick = [] { juce::URL("https://www.tone3000.com").launchInDefaultBrowser(); };
+    onClick = [] { openExternalLink("https://www.tone3000.com"); };
   }
   void paintButton(juce::Graphics& g, bool, bool) override {
     Brand::drawLogo(g, getLocalBounds().toFloat());

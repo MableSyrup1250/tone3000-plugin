@@ -61,10 +61,14 @@ public:
   // Info view open/closed: the owner drops the meter-band pads so the card
   // can scroll to the faceplate, and lets the card grow.
   std::function<void(bool)> onInfoVisible;
+  std::function<void()> onViewChanged;
   // The header's ⇄: launch the Select flow to swap this block's tone.
   std::function<void()> onSwap;
   // The card's height in the current view (kHeight, or taller in info).
   int preferredHeight();
+  void setAvailableHeight(int height) { availableHeight_ = height; }
+  // The detail page shares its navigation row with the card actions.
+  void setNavigation(juce::Component& navigation);
 
   void paint(juce::Graphics& g) override;
   void paintOverChildren(juce::Graphics& g) override;
@@ -107,6 +111,7 @@ private:
   void toggleFavorite();
   void switchModel(const juce::String& id);
   void share();
+  int headerHeight() const;
 
   Services& services_;
   ChainItem block_;
@@ -128,6 +133,10 @@ private:
   ChromeIconButton share_{Icon::Share, ChromeIconButton::Tone::plain, help::Key::shareTone};
   ChromeIconButton swap_{Icon::ArrowLeftRight, ChromeIconButton::Tone::plain, help::Key::swapTone};
   ChromeIconButton remove_{Icon::Trash2, ChromeIconButton::Tone::plain, help::Key::removeBlock};
+  ChromeIconButton save_{Icon::Download, ChromeIconButton::Tone::plain, help::Key::saveToHouston};
+  juce::Component* navigation_ = nullptr;
+  bool savingToHouston_ = false;
+  int availableHeight_ = kHeight;
 
   // Body (tone / info views live in `body_`, which dims while bypassed)
   DimGroup body_;

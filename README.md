@@ -103,6 +103,17 @@ needs registering in TONE3000 > Settings > API Keys.
 
 Build with `-DT3K_ARTEMIS_KIOSK=ON` on Linux for the device's full-screen
 standalone. The header back button exits through JUCE so Launchpad can resume.
+Each launch reasserts borderless fullscreen with the X11/XWayland window
+manager, including when settings already exist. `script/test-artemis-kiosk.sh`
+checks fresh and repeated launches under Xvfb/Openbox, then restarts the window
+manager and checks again.
+
+The logo and other web links use Launchpad's local `/api/kiosk/open` endpoint
+and its Webkiosk profile, touch controls, and keyboard. On a successful handoff,
+the standalone saves its session and exits so it can be reopened from Launchpad.
+Rebuild/deploy Launchpad alongside the plugin to enable this endpoint; if it is
+unavailable, links stay disabled instead of opening a desktop browser.
+
 Text fields use a native on-screen keyboard; knobs use the native JUCE touch
 controls. The standalone starts sign-in with TONE3000's phone/QR device flow,
 keeping the code visible on the display. The installed JACK server and audio
@@ -116,6 +127,11 @@ Features save `/data/artemis/config/jack-buffer-size` (or
 the caption and latency readout show the active device buffer. Saving never
 reopens the device or resizes JACK. Houston / Guitarix and other JACK clients
 use the same boot-time size. ALSA MIDI remains available for controllers.
+
+The [Artemis XRUN comparison](docs/artemis-xrun-ab-2026-11-10.md) records the
+hardware A/B test. Its saved two-NAM-plus-IR chain passed five minutes of
+steady playback at 64 frames; 32 frames still produced XRUNs. The tested
+device keeps a 64-frame boot preference.
 
 The device layout keeps the 13:6 panel aspect ratio at both 1560×720 and
 780×360 logical pixels. Its compact header, 75% control row, and smaller

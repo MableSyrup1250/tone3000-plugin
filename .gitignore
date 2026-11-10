@@ -24,3 +24,6 @@ TONE3000-CERTS/
 notes/
 build-ui/
 build-ui-release/
+
+# Retired WebView frontend dependencies are not native UI source.
+node_modules/

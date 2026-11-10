@@ -72,6 +72,27 @@ fixtures `extends` an earlier scenario, overriding nested state as needed;
 `drive` reuses that scenario's interaction steps. Capture them with
 `$UI --capture /tmp/t3k-artemis artemis-`.
 
+`artemis-pages-*` covers phone sign-in, tone search (including collapsed
+filters and the native keyboard), block inspection / info / EQ / scrolling,
+and both Settings tabs. Each runs at 1560×720 logical pixels and at 780×360
+(the panel with 2× display scaling); both produce 1560×720 PNGs. These use
+mock login codes, catalog data and Houston export responses. Capture just
+these pages with `$UI --capture /tmp/t3k-pages artemis-pages-`.
+
+The Artemis control strip and CPU/info bar share a bottom drawer. Tap its
+CONTROLS handle or swipe up/down to open/close it. Block inspection (including
+EQ and Info), search, and sign-in start collapsed; returning to the chain
+restores its last drawer choice. The existing Show Info Bar setting still
+controls whether CPU/hints appear inside the expanded drawer. Hosted plugin
+windows retain their existing layout.
+
+`$UI --capture /tmp/t3k-drawer artemis-drawer-` captures both display scales,
+with the drawer open/closed, both EQ editors, Info and its scrolled content.
+The compact EQ fits above the collapsed drawer; long metadata and the model
+view retain scrolling. The drawer self-tests exercise tap/swipe through a
+real window, navigation defaults, manual overrides, and the scaled EQ's
+rightmost fader hit target.
+
 ### Visual regression
 
 Captures are compared against captures, before a change and after it:

@@ -1,4 +1,5 @@
 #include "NativeEditor.h"
+#include "ArtemisKioskWindow.h"
 
 #include "core/Fonts.h"
 #if JUCE_LINUX && T3K_ARTEMIS_KIOSK
@@ -287,11 +288,25 @@ bool NativeEditor::keyPressed(const juce::KeyPress& key) {
   return false;
 }
 
-void NativeEditor::visibilityChanged() { services_.clock.wake(); }
+void NativeEditor::visibilityChanged() {
+  services_.clock.wake();
+  if (artemisStandalone()) {
+    juce::Component::SafePointer<NativeEditor> self(this);
+    juce::MessageManager::callAsync([self] {
+      if (self != nullptr) enforceArtemisKioskWindow(*self);
+    });
+  }
+}
 
 void NativeEditor::parentHierarchyChanged() {
   services_.clock.wake();
   logPeerAttached();
+  if (artemisStandalone()) {
+    juce::Component::SafePointer<NativeEditor> self(this);
+    juce::MessageManager::callAsync([self] {
+      if (self != nullptr) enforceArtemisKioskWindow(*self);
+    });
+  }
 #if !JUCE_IOS
   if (!artemisStandalone())
   if (auto* window = dynamic_cast<juce::DocumentWindow*>(getTopLevelComponent())) {
