@@ -1,3 +1,4 @@
+#include "NamSizePolicy.h"
 #include "NamEngine.h"
 #include "NAM/slimmable.h"
 #include "RtWorkerPool.h"
@@ -63,7 +64,7 @@ void NamEngine::prepare(int newMaxBlockSize) {
 }
 
 void NamEngine::setSlimmableSize(double val) {
-  requestedSlimmableSize = juce::jlimit(0.0, 1.0, val);
+  requestedSlimmableSize = supportedNamSize(val);
   if (!isPrepared)
     return;
   for (auto& instance : instances) {

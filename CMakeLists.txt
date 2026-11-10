@@ -493,6 +493,34 @@ if (T3K_ARTEMIS_KIOSK AND EXISTS "${_juce_standalone_cpp}")
     endif()
 endif()
 
+# Validate the actual JACK server before activating audio, including direct
+# executable launches that bypass Launchpad. Never resize a shared live server.
+set(_juce_jack_cpp "${T3K_JUCE_SOURCE_DIR}/modules/juce_audio_devices/native/juce_JackAudio.cpp")
+if (EXISTS "${_juce_jack_cpp}")
+    file(READ "${_juce_jack_cpp}" _juce_jack_src)
+    if (NOT _juce_jack_src MATCHES "T3K_ARTEMIS_JACK_64")
+        set(_jack_open_old "        lastError.clear();")
+        set(_jack_open_new [=[       #if T3K_ARTEMIS_KIOSK // T3K_ARTEMIS_JACK_64
+        if (getCurrentBufferSizeSamples() != 64)
+        {
+            close();
+            lastError = "TONE3000 requires 64 JACK frames. Open it from Launchpad to change the shared buffer and restart Artemis.";
+            return lastError;
+        }
+       #endif
+        lastError.clear();]=])
+        if (_juce_jack_src MATCHES "\r\n")
+            string(REPLACE "\n" "\r\n" _jack_open_new "${_jack_open_new}")
+        endif()
+        string(FIND "${_juce_jack_src}" "${_jack_open_old}" _jack_open_index)
+        if (_jack_open_index EQUAL -1)
+            message(FATAL_ERROR "T3K_ARTEMIS_JACK_64: JUCE JACK open anchor changed")
+        endif()
+        string(REPLACE "${_jack_open_old}" "${_jack_open_new}" _juce_jack_src "${_juce_jack_src}")
+        file(WRITE "${_juce_jack_cpp}" "${_juce_jack_src}")
+    endif()
+endif()
+
 # T3K_AUDIO_DEFAULT_SETUP: the default sample rate for an unset (0) request
 # in AudioDeviceManager::setAudioDeviceSetup. JUCE 9.0.3 resolves a 0 rate /
 # buffer to device defaults again (9.0.1 fed the 0 to findNearestValue and

@@ -1,0 +1,78 @@
+{
+  "device": "192.168.1.121",
+  "binary_sha256": "16d384deb4eff90f95a9be9d6bae913d9e2f87681d104b0055599a2e5c2371f9",
+  "boot32": {
+    "active_frames": 32,
+    "launch_http_status": 409,
+    "direct_launch_audio_active": false
+  },
+  "boot64": {
+    "active_frames": 64,
+    "selected_frames": 64,
+    "normal_launch_ok": true,
+    "compositor_pid": 1476,
+    "launchpad_pid": 1686,
+    "plugin_pid": 2539
+  },
+  "tests": {
+    "nam_policy": 2,
+    "launchpad_python": 36,
+    "launchpad_ui_unit": 26,
+    "ui_viewports": [
+      [
+        780,
+        360
+      ],
+      [
+        800,
+        480
+      ],
+      [
+        1560,
+        720
+      ]
+    ]
+  },
+  "measurement": {
+    "duration_s": 300.0329169649999,
+    "xruns": 0,
+    "frames": 64,
+    "sample_rate": 48000,
+    "cpu_mean": 19.71729475657145,
+    "cpu_max": 21.844083786010742,
+    "warmup_s": 1.0063623739988543,
+    "host_xruns": 0,
+    "host_errors": "",
+    "capture_rms_dbfs": [
+      -107.00185065508452,
+      -107.36045832072713,
+      -109.83664854343832,
+      -110.07023003756849,
+      -109.7866879403958,
+      -27.988408626012983,
+      -27.861418816321347
+    ],
+    "capture_peak": [
+      2.4199485778808594e-05,
+      2.0623207092285156e-05,
+      1.800060272216797e-05,
+      1.7642974853515625e-05,
+      1.7762184143066406e-05,
+      0.06491661071777344,
+      0.06574714183807373
+    ],
+    "capture_frames": 14400512,
+    "rms_1s_span_db": [
+      0.2523377472456758,
+      0.2524459274075248
+    ],
+    "rms_1s_min_dbfs": [
+      -28.026080810034713,
+      -27.89920172375392
+    ],
+    "finite_audio": true,
+    "clipped_samples": 0
+  },
+  "launchpad_commit": "c4180ca",
+  "first_recording_note": "Initial ~58 seconds of silent return, cause not established; repeated with audible-return gate."
+}

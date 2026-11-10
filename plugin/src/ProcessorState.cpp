@@ -1,3 +1,4 @@
+#include "NamSizePolicy.h"
 #include "Processor.h"
 
 #include <atomic>
@@ -93,8 +94,7 @@ bool TONE3000Processor::readPersistedMultiCoreEnabled() {
 
 double TONE3000Processor::readPersistedNamSlimSizeDefault() {
   // 0.0 = lite, the shipped default (see ChainBlock::namSlimSize).
-  return juce::jlimit(
-      0.0, 1.0,
+  return supportedNamSize(
       juce::PropertiesFile(userSettingsOptions()).getDoubleValue(kNamSlimSizeDefaultKey, 0.0));
 }
 
@@ -116,7 +116,7 @@ void TONE3000Processor::setMultiCoreEnabled(bool enabled, bool persist) {
   bumpChainRevision();
 }
 void TONE3000Processor::setNamSlimSizeDefault(double slimSize) {
-  slimSize = juce::jlimit(0.0, 1.0, slimSize);
+  slimSize = supportedNamSize(slimSize);
   if (namSlimSizeDefault.load() == slimSize)
     return;
 
@@ -223,7 +223,7 @@ void TONE3000Processor::applyBlockSettings(ChainBlock& block, const juce::ValueT
   // NAM container fast-paths an unchanged tier, and every restore path runs
   // under the chain-edit fade, so a real retier splices in silently.
   block.namSlimSize =
-      juce::jlimit(0.0, 1.0, static_cast<double>(blockState.getProperty("slimSize", 0.0)));
+      supportedNamSize(static_cast<double>(blockState.getProperty("slimSize", 0.0)));
   if (block.namEngine != nullptr)
     block.namEngine->setSlimmableSize(block.namSlimSize);
 

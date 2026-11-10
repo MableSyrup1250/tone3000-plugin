@@ -92,8 +92,12 @@ PluginSettingsPage::PluginSettingsPage(Services& services)
       showPitch_("Show Pitch Shift",
                  "Transpose your instrument up or down without retuning or use a MIDI expression pedal for "
                  "whammy-style effects."),
+#if T3K_ARTEMIS_KIOSK
+      namSize_("NAM A2 Size: Lite", "Locked to Lite on Artemis to keep audio processing within the device's CPU budget. Saved presets also use Lite."),
+#else
       namSize_("NAM A2 Size",
                "Default size for new NAM blocks. Existing blocks keep their own, so presets load as saved."),
+#endif
       lite_("A2-Lite", "Sounds great and uses less CPU"),
       full_("A2-Full", "Maximum accuracy model"),
       blockSize_("Per-Block NAM Size",
@@ -158,16 +162,20 @@ PluginSettingsPage::PluginSettingsPage(Services& services)
   // NAM A2 Size.
   namSize_.setInlineLabel();
   namSize_.content().setGap(form::kControlGap);
+#if !T3K_ARTEMIS_KIOSK
   namSize_.content().add(lite_);
   namSize_.content().add(full_);
   lite_.onSelect = [this] { services_.chain.setNamSlimSizeDefault(kSlimSizeLite); };
   full_.onSelect = [this] { services_.chain.setNamSlimSizeDefault(kSlimSizeFull); };
+#endif
   add(namSize_);
 
   // Per-block controls.
+#if !T3K_ARTEMIS_KIOSK
   blockSize_.content().add(blockSizeTip_);
   blockSize_.onChange = [this](bool on) { services_.prefs.setBool(UiPrefs::kShowBlockSizeControl, on); };
   add(blockSize_);
+#endif
   normalize_.content().add(normalizeTip_);
   normalize_.onChange = [this](bool on) { services_.prefs.setBool(UiPrefs::kShowBlockNormalizeControl, on); };
   add(normalize_);

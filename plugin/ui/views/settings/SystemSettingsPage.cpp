@@ -30,6 +30,10 @@ std::vector<SelectField::Option> deviceOptions(const std::vector<juce::String>& 
 
 // Captions vary by backend, per the UX spec.
 juce::String bufferCaption(const AudioDeviceState& s) {
+#if T3K_ARTEMIS_KIOSK
+  juce::ignoreUnused(s);
+  return "Locked to 64 frames for TONE3000. Shared with Houston. Managed in Launchpad.";
+#endif
   if (s.bufferSizeRequiresReboot)
     return "Shared with Houston / Guitarix. Applies after reboot. Active: " +
            juce::String(s.bufferSize) + " frames.";

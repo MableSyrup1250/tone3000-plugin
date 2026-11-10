@@ -37,6 +37,7 @@ target_sources(DspTests PRIVATE
     src/pitch_shift_tests.cpp
     src/preset_tests.cpp
     src/processor_tests.cpp
+    src/nam_size_policy_tests.cpp
     src/spread_tests.cpp
     src/state_cache_tests.cpp
     src/swap_fade_tests.cpp
@@ -95,6 +96,7 @@ target_compile_definitions(DspTests PRIVATE
     # The processor compiles in its headless configuration (no editor /
     # standalone-window code); the DSP under test is identical.
     HEADLESS=1
+    T3K_ARTEMIS_KIOSK=$<BOOL:${T3K_ARTEMIS_KIOSK}>
     # midi_map_tests pumps the dispatch loop (runDispatchLoopUntil) to
     # deliver the MidiMapper's AsyncUpdater work; the plugin itself never
     # needs modal loops.

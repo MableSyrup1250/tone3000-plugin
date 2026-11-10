@@ -87,7 +87,7 @@ not a proposed deployment change. The timing difference between A and the
 incoming UI/settings changes has not been bisected. The closely matching B32
 and C32 results do not support discarding CLOBBER as the fix.
 
-## Result left on the device
+## First-pass result (superseded by the lockdown below)
 
 * C installed at `/usr/bin/TONE3000`, SHA-256
   `67f94b85085e0f87df87c06fdadeaa6489fac9b232c24e1b8c86611c3c398fdc`.
@@ -130,3 +130,70 @@ original executable (`TONE3000-binary`), original persistent settings
 closed, then reboot to restore the previous audio profile. No firmware was
 flashed and no XR18 configuration was changed. The original local plugin commit is also
 retained on branch `backup/pre-xrun-ab-665fc2c`.
+
+## 64-frame / Lite lockdown follow-up
+
+The Artemis build now refuses to activate JACK audio unless the actual server
+buffer is 64 frames. The plugin buffer selector is read-only, and its backend
+cannot write the shared boot preference. NAM A2 size is forced to Lite in the
+engine, machine default, block setter and preset/session restoration. The
+Full/Lite selector and per-block size option are removed on Artemis; desktop
+builds retain those options.
+
+Launchpad checks the active boot and saved preference before launching. At 32 it
+shows Cancel or “Use 64 and restart”; at active 64 with a pending return to 32 it
+asks before saving 64 again. Cancel makes no write, launch or reboot request.
+The dialog prominently identifies Houston's shared latency change: at 48 kHz,
+a period changes from 0.67 to 1.33 ms (+0.67 ms), and the two-period output
+buffer from 1.33 to 2.67 ms (+1.33 ms). These are buffer durations, not a measured
+analogue round trip. The image fallback remains 32; missing or invalid saved
+preferences are reported as that next-boot fallback.
+
+Validation:
+
+- Real device boot at 32: the Launchpad launch API returned HTTP 409 without
+  starting the plugin. A direct executable launch did not activate JACK audio
+  or call `prepareToPlay` (the UI remained available, with zero audio CPU).
+- Saved 64 through the Launchpad API and rebooted through its power API:
+  active and saved settings both read 64; normal app launch returned success.
+- Release standalone build and two processor/engine regression tests passed.
+  A Full-size block restored from a desktop-style state becomes Lite; setters,
+  subsequent save/reopen and direct engine size requests remain Lite.
+- Launchpad: 36 relevant Python tests and 26 UI unit tests passed. Browser
+  tests at 780x360, 800x480 and 1560x720 covered refusal, consent, failed
+  saves/restarts, pending reboot, next-boot launch, unavailable settings,
+  keyboard navigation and visible warning/refusal controls.
+
+During deployment, restarting `artemis-kiosk.service` left orphaned compositor
+and supervisor sessions because the PAM session lives outside the service's
+control group. This caused visible cycling and extra audio load. The deployment
+was rolled back, and the user's power cycle cleared the orphaned sessions.
+The subsequent deployment used Launchpad's `/api/system/power` action
+`restart-kiosk`, which shuts down only Launchpad and lets its existing supervisor
+restart it. The compositor PID stayed unchanged and one session remained.
+Both subsequent full audio-profile reboots completed normally. Do not use a
+service restart to reload Launchpad on this device.
+
+Follow-up artifacts are in
+`/home/booky/artemis-os/build/output/tone3000-lockdown-20261110/`.
+The pre-follow-up deployment backup is `/data/artemis/t3k-lockdown/original/`
+(Launchpad archive, plugin binary and saved plugin settings).
+
+The first 300-second follow-up recorded zero device/capture XRUNs (JACK CPU
+mean 19.43%, maximum 23.01%). Its analogue returns were silent for the first
+approximately 58 seconds, then stable. The cause of that initial silence was
+not established, so it is not counted as five minutes of continuous audio.
+A second measurement explicitly waits for audible returns before starting
+its timer; both recordings are retained in the artifact directory.
+
+The second run detected audible returns after 1.01 seconds and then captured
+300.03 seconds: **0 device XRUNs, 0 capture XRUNs**, JACK CPU mean **19.72%**,
+maximum **21.84%**. Both outputs remained audible throughout (minimum
+one-second RMS -28.03/-27.90 dBFS; spans 0.253 dB), with no clipped or non-finite
+samples. The plugin counter also stayed at zero from this boot's startup.
+Portable results: `artemis-lockdown-2026-11-10.json`.
+
+Final binary SHA-256:
+`16d384deb4eff90f95a9be9d6bae913d9e2f87681d104b0055599a2e5c2371f9`.
+Launchpad commit: `c4180ca`. The device remains on native JACK 48 kHz / 64 frames /
+two periods, with the original two-NAM-plus-IR chain open and one desktop session.

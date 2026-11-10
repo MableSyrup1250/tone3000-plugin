@@ -1,3 +1,4 @@
+#include "NamSizePolicy.h"
 #include "Processor.h"
 #include <algorithm>
 #include <cmath>
@@ -1518,7 +1519,7 @@ bool TONE3000Processor::setBlockParam(const std::string& blockId, const juce::St
 }
 
 bool TONE3000Processor::setBlockSlimSize(const std::string& blockId, double slimSize) {
-  slimSize = juce::jlimit(0.0, 1.0, slimSize);
+  slimSize = supportedNamSize(slimSize);
 
   // Cheap early-out first: no fade (and no history entry) when nothing
   // changes.

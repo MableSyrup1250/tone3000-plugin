@@ -24,19 +24,7 @@ namespace {
 constexpr double kPreferredSampleRate = 48000.0;
 constexpr int kPreferredBufferSize = 128;
 
-#if T3K_ARTEMIS_KIOSK
-juce::File artemisBufferPreference() {
-  return juce::File(juce::SystemStats::getEnvironmentVariable(
-      "ARTEMIS_JACK_BUFFER_FILE", "/data/artemis/config/jack-buffer-size"));
-}
 
-int artemisSelectedBufferSize(int active) {
-  const auto saved = artemisBufferPreference().loadFileAsString().trim();
-  if (saved == "32" || saved == "64")
-    return saved.getIntValue();
-  return active > 0 ? active : 32;
-}
-#endif
 
 // The plugin consumes at most a stereo pair, so channel selection is a
 // min-1 / max-2 window over the device's inputs (JUCE selector semantics)
@@ -296,12 +284,11 @@ juce::var StandaloneAudioSettings::getState() {
   obj->setProperty("sampleRate", device != nullptr ? device->getCurrentSampleRate() : 0.0);
   obj->setProperty("bufferSize", device != nullptr ? device->getCurrentBufferSizeSamples() : 0);
 #if T3K_ARTEMIS_KIOSK
-  // Native JACK has one size for every client. Save a boot preference only;
-  // never reopen the device or resize the server from this control.
-  obj->setProperty("bufferSizes", juce::Array<juce::var>{32, 64});
-  obj->setProperty("bufferSizeAfterReboot", artemisSelectedBufferSize(
-      device != nullptr ? device->getCurrentBufferSizeSamples() : 0));
-  obj->setProperty("bufferSizeRequiresReboot", true);
+  // Native JACK has one size for every client. Launchpad owns the consent
+  // and reboot flow; the plugin cannot change this shared setting.
+  obj->setProperty("bufferSizes", juce::Array<juce::var>{64});
+  obj->setProperty("bufferSizeAfterReboot", 64);
+  obj->setProperty("bufferSizeRequiresReboot", false);
 #endif
 
   obj->setProperty("hasControlPanel", device != nullptr && device->hasControlPanel());
@@ -504,26 +491,8 @@ juce::var StandaloneAudioSettings::setSampleRate(double rate) {
 
 juce::var StandaloneAudioSettings::setBufferSize(int samples) {
 #if T3K_ARTEMIS_KIOSK
-  if (samples != 32 && samples != 64)
-    return makeResult("JACK buffer size must be 32 or 64 frames.");
-  const auto preference = artemisBufferPreference();
-  const auto created = preference.getParentDirectory().createDirectory();
-  if (created.failed())
-    return makeResult("Unable to save JACK buffer size.");
-  juce::TemporaryFile temporary(preference);
-  {
-    juce::FileOutputStream output(temporary.getFile());
-    if (!output.openedOk() || !output.writeText(juce::String(samples) + "\n", false, false, "\n"))
-      return makeResult("Unable to save JACK buffer size.");
-    output.flush();
-    if (output.getStatus().failed())
-      return makeResult("Unable to save JACK buffer size.");
-  }
-  if (!temporary.overwriteTargetFileWithTemporary())
-    return makeResult("Unable to save JACK buffer size.");
-  if (onDeviceStateChanged)
-    onDeviceStateChanged();
-  return makeResult({});
+  juce::ignoreUnused(samples);
+  return makeResult("TONE3000 requires 64 frames. Shared audio settings are managed in Launchpad.");
 #else
   auto* dm = deviceManager();
   if (dm == nullptr)

@@ -215,6 +215,13 @@ device without any conversions") open the card exclusively, which takes the
 whole interface away from every other app while the standalone runs. The
 JACK driver shares it.
 
+The Artemis kiosk build is JACK-only and requires exactly 64 frames. Launchpad
+asks before saving this shared buffer setting and restarting; Cancel leaves the
+system at its existing setting. The image default remains 32 frames for Houston.
+The plugin cannot change the buffer, and direct launches at another JACK size
+cannot activate audio. Artemis also locks NAM A2 models to Lite, including saved
+presets and per-block settings; the size selectors are removed in this build.
+
 ## Audio processing
 
 The plugin is a JUCE processor running a chain of NAM and IR blocks, anchored

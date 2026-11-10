@@ -313,7 +313,12 @@ void BlockCard::syncHeader() {
   const bool sizeControlEnabled = services_.prefs.getBool(UiPrefs::kShowBlockSizeControl, false);
   const bool defaultFull = isSlimSizeFull(services_.chain.state().namSlimSizeDefault);
   const bool showSize = isNam() && (sizeControlEnabled || slimFull_ != defaultFull);
+#if T3K_ARTEMIS_KIOSK
+  const int wantCells = 0; // Lite is enforced, regardless of old UI preferences.
+  juce::ignoreUnused(showSize);
+#else
   const int wantCells = !showSize ? 0 : sizeControlEnabled ? 2 : 1;
+#endif
   // A size change re-selects the toggle but relabels (rebuilds) the chip. The
   // toggle must never be rebuilt here: its click handler calls back into this
   // through the store's synchronous refresh, and destroying it there frees the

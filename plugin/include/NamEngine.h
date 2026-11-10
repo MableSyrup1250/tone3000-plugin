@@ -5,6 +5,7 @@
 #include <vector>
 #include "NAM/dsp.h"
 #include "ChainDomain.h"
+#include "NamSizePolicy.h"
 
 /**
  * A JUCE-compatible host for a nam::DSP model, running in the chain domain
@@ -178,5 +179,5 @@ private:
   bool isPrepared = false;
   int maxBlockSize = 0;
 
-  double requestedSlimmableSize{1.0};
+  double requestedSlimmableSize{supportedNamSize(1.0)};
 };
